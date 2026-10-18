@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PitchPulse — Football Scores & Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+:root{--bg:#070b14;--card:rgba(255,255,255,.06);--bd:rgba(255,255,255,.1);--tx:#f1f5f9;--mut:#8b9ab3;--acc:#22d3a0;--accx:#04120d;--side:rgba(8,13,25,.85);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#eef2f8;--card:rgba(255,255,255,.75);--bd:rgba(15,23,42,.12);--tx:#0f172a;--mut:#51607a;--accx:#fff;--acc:#0a8f68;--side:rgba(255,255,255,.9);color-scheme:light}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(900px 500px at 85% -10%,rgba(34,211,160,.14),transparent),radial-gradient(700px 500px at -10% 30%,rgba(99,102,241,.14),transparent),var(--bg);color:var(--tx);min-height:100vh}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.mut{color:var(--mut)}
+.chip{padding:6px 14px;border-radius:99px;border:1px solid var(--bd);font-size:13px;cursor:pointer;white-space:nowrap;background:var(--card);color:var(--tx)}
+.chip.on{background:var(--acc);color:var(--accx);border-color:transparent;font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}100%{box-shadow:0 0 0 9px rgba(239,68,68,0)}}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.live{color:#ef4444;font-weight:700;display:inline-flex;gap:6px;align-items:center}
+#main>*{animation:fade .3s ease}
+.hov{cursor:pointer;transition:.2s}.hov:hover{transform:translateY(-2px);border-color:var(--acc)}
+.fb{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;font-size:11px;font-weight:700;color:#fff;margin-right:3px}
+.fbW{background:#16a34a}.fbD{background:#64748b}.fbL{background:#dc2626}
+.tab{padding:10px 14px;font-size:14px;font-weight:600;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.tab.on{color:var(--acc);border-color:var(--acc)}
+.bar{height:6px;border-radius:9px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%}
+.pitch{position:relative;aspect-ratio:3/4;max-width:480px;margin:auto;border-radius:16px;border:2px solid rgba(255,255,255,.45);background:repeating-linear-gradient(#1f7a46 0 10%,#1b6e3f 10% 20%);overflow:hidden}
+.pitch:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid rgba(255,255,255,.45)}
+.pitch:after{content:"";position:absolute;left:50%;top:50%;width:90px;height:90px;margin:-45px;border:2px solid rgba(255,255,255,.45);border-radius:50%}
+.pl{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;width:62px;z-index:2}
+.pl b{display:grid;place-items:center;width:30px;height:30px;margin:auto;border-radius:50%;font-size:12px;border:2px solid #fff}
+.pl i{font-style:normal;font-size:10px;font-weight:700;background:#0008;color:#fff;border-radius:6px;padding:0 4px;display:inline-block}
+.pl small{display:block;font-size:10px;color:#fff;text-shadow:0 1px 2px #000}
+table{width:100%;border-collapse:collapse;font-size:13px}th{color:var(--mut);font-weight:600;text-align:right;padding:8px 6px}td{padding:9px 6px;text-align:right;border-top:1px solid var(--bd)}
+th:nth-child(2),td:nth-child(2){text-align:left}tr[data-go]{cursor:pointer}tr[data-go]:hover{background:var(--card)}
+#bnav{padding-bottom:env(safe-area-inset-bottom,0px)}
+.nv{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;color:var(--mut);font-weight:600;font-size:14px;text-decoration:none}
+.nv.on{background:var(--card);color:var(--acc)}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<aside class="hidden md:flex flex-col fixed left-0 top-0 h-full w-60 p-4 gap-1 z-20" style="background:var(--side);border-right:1px solid var(--bd);backdrop-filter:blur(16px);padding-top:calc(16px + env(safe-area-inset-top,0px))">
+  <div class="text-xl font-extrabold px-2 mb-5">⚽ Pitch<span style="color:var(--acc)">Pulse</span></div>
+  <a class="nv" data-n="hub" href="#/">📺 Scores</a><a class="nv" data-n="table" href="#/table">🏆 Standings</a><a class="nv" data-n="stats" href="#/stats">📊 Stats</a><a class="nv" data-n="teams" href="#/teams">🛡️ Clubs</a>
+  <div class="mut text-xs mt-auto px-2">Simulated data · runs fully offline</div>
+</aside>
+<nav id="bnav" class="md:hidden fixed bottom-0 inset-x-0 z-20 flex justify-around" style="background:var(--side);border-top:1px solid var(--bd);backdrop-filter:blur(16px)">
+  <a class="nv" data-n="hub" href="#/">📺 Scores</a><a class="nv" data-n="table" href="#/table">🏆 Table</a><a class="nv" data-n="stats" href="#/stats">📊 Stats</a><a class="nv" data-n="teams" href="#/teams">🛡️ Clubs</a>
+</nav>
+<main id="main" class="md:ml-60 p-4 md:p-8 pb-28 md:pb-10 max-w-6xl mx-auto"></main>
+
+<script>
+/* ---------- seeded data ---------- */
+const R=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const FN="Luca,Mateo,Jonas,Ethan,Rafael,Kai,Noah,Dario,Tomas,Andre,Idris,Felix,Marco,Sami,Oscar,Leon,Ibrahim,Victor,Hugo,Theo".split(",");
+const LN="Hartley,Moreno,Brandt,Okafor,Silva,Vance,Rossi,Duarte,Keller,Mbeki,Alves,Novak,Costa,Lindgren,Barros,Quinn,Ferrer,Sandoval,Haddad,Petrov,Ricci,Mendes,Walsh,Adeyemi,Ortega,Larsen,Navarro,Bishop,Varga,Delacroix".split(",");
+const NA=["🇬🇧 ENG","🇪🇸 ESP","🇧🇷 BRA","🇳🇬 NGA","🇫🇷 FRA","🇩🇪 GER","🇮🇹 ITA","🇵🇹 POR","🇳🇱 NED","🇦🇷 ARG"];
+const AT=["Pace","Shooting","Passing","Dribbling","Defending","Physical"];
+const BASE={GK:[48,20,56,40,30,72],DF:[66,44,64,60,80,78],MF:[68,66,80,76,66,68],FW:[80,80,66,78,36,70]};
+const SQ=[["GK",2,[1,13]],["DF",6,[2,3,4,5,15,12]],["MF",6,[6,8,10,14,16,18]],["FW",4,[7,9,11,17]]];
+const PN={GK:"Goalkeepers",DF:"Defenders",MF:"Midfielders",FW:"Forwards"};
+const T=[
+{id:"rbu",n:"Redbridge United",s:"RBU",c:"#e11d48",tc:"#fff",lk:"Premier League",f:"4-3-3",v:"Redbridge Park",m:"Alan Whitcombe",form:"WWDWW"},
+{id:"ngf",n:"Northgate FC",s:"NGF",c:"#2563eb",tc:"#fff",lk:"Premier League",f:"4-2-3-1",v:"Northgate Arena",m:"Stefan Brandl",form:"WLWWD"},
+{id:"hbc",n:"Harbor City",s:"HBC",c:"#38bdf8",tc:"#06283d",lk:"Premier League",f:"4-3-3",v:"Harbor Stadium",m:"Joaquin Medina",form:"DWWLW"},
+{id:"wlr",n:"Westlake Rovers",s:"WLR",c:"#16a34a",tc:"#fff",lk:"Premier League",f:"4-2-3-1",v:"Lakeside Ground",m:"Gareth Pryce",form:"LDLWL"},
+{id:"rso",n:"Real Solana",s:"RSO",c:"#e5e7eb",tc:"#1e293b",lk:"Champions League",f:"4-3-3",v:"Estadio Solana",m:"Emilio Cardoso",form:"WWDWW"},
+{id:"cbr",n:"Calcio Bruno",s:"CBR",c:"#a855f7",tc:"#fff",lk:"Champions League",f:"4-2-3-1",v:"Stadio Bruno",m:"Paolo Ventura",form:"LDLDW"}];
+const TM={},P={};
+T.forEach((t,ti)=>{TM[t.id]=t;t.sq=[];let k=0;
+SQ.forEach(([pos,n,nums])=>{for(let j=0;j<n;j++){const ix=ti*18+k++,r=R(ix*131+7),rr=(a,b)=>a+Math.floor(r()*(b-a+1));
+const gm={GK:[0,0],DF:[0,2],MF:[1,5],FW:[3,9]}[pos],am={GK:[0,0],DF:[0,2],MF:[1,5],FW:[1,5]}[pos];
+const g=rr(...gm),as=rr(...am),at=BASE[pos].map(v=>Math.max(25,Math.min(95,v+rr(-8,9)))),age=rr(19,35),ovr=Math.round(at.reduce((a,b)=>a+b)/6);
+const p={id:t.id+ix,t:t.id,pos,num:nums[j],n:FN[(ix*7+Math.floor(ix/30)*3)%20]+" "+LN[ix%30],age,nat:NA[rr(0,9)],foot:r()<.72?"Right":"Left",
+val:"€"+Math.max(2,Math.round((ovr-48)*(2.2-(age-19)*.05)*(.6+r())))+"M",ap:rr(7,9),g,a:as,xg:+(g*(.8+r()*.5)+(pos=="FW"?.6:.2)).toFixed(1),
+pp:rr(70,92),tk:rr(pos=="DF"?64:46,pos=="DF"?82:70),yc:rr(0,3),rc:r()<.08?1:0,at,rt:+(6.3+r()*1.9).toFixed(1),
+log:[0,1,2,3,4].map(i=>({o:T[(ti+1+i)%6].s,res:["W","D","L"][rr(0,2)],rt:+(5.6+r()*3.4).toFixed(1),g:pos=="FW"&&r()<.4?1:pos=="MF"&&r()<.2?1:0,a:pos!="GK"&&pos!="DF"&&r()<.3?1:0}))};
+t.sq.push(p);P[p.id]=p}});
+const by=x=>t.sq.filter(p=>p.pos==x),w=t.f=="4-3-3";
+t.xi=[by("GK")[0],...by("DF").slice(0,4),...by("MF").slice(0,w?3:5),...by("FW").slice(0,w?3:1)];
+t.bench=t.sq.filter(p=>!t.xi.includes(p))});
+const FR={"4-3-3":[1,4,3,3],"4-2-3-1":[1,4,2,3,1]};
+/* fixtures: ev=[min,type,side,xiSlot,assistSlot]; s=[poss,xgH,xgA,sotH,sotA,passH,passA,cornH,cornA,foulH,foulA] (full-time values) */
+const F=[
+{id:"f1",lg:"Premier League",h:"rbu",a:"ngf",st:"LIVE",min:62,hs:1,as:1,day:"Today",time:"17:30",ref:"M. Oliver-Hayes",att:"60,214",
+ ev:[[14,"g","h",9,7],[38,"y","a",3],[51,"g","a",10,6],[58,"y","h",5]],
+ fut:[[67,"g","h",8,5],[71,"y","a",2],[74,"s","a",9],[79,"r","a",4],[83,"g","a",10,8],[88,"y","h",1]],
+ s:[56,2.4,1.7,9,7,86,83,8,5,11,13]},
+{id:"f2",lg:"Premier League",h:"hbc",a:"wlr",st:"FT",min:90,hs:3,as:1,day:"Today",time:"15:00",ref:"A. Dunmore",att:"53,380",
+ ev:[[9,"g","h",10,8],[27,"g","a",9,5],[45,"y","h",6],[56,"g","h",8,7],[63,"s","a",8],[71,"r","a",2],[80,"g","h",10,6]],s:[64,2.9,0.8,8,3,89,80,9,2,9,14]},
+{id:"f3",lg:"Champions League",h:"rso",a:"cbr",st:"FT",min:90,hs:2,as:2,day:"Yesterday",time:"21:00",ref:"F. Laurent",att:"78,901",
+ ev:[[12,"g","h",10,7],[33,"g","a",8,6],[49,"y","a",4],[64,"g","a",9,5],[77,"r","h",3],[90,"g","h",8,10]],s:[58,1.8,1.9,6,6,88,79,6,5,10,12]},
+{id:"f4",lg:"Champions League",h:"ngf",a:"cbr",st:"FT",min:90,hs:1,as:0,day:"Yesterday",time:"18:45",ref:"S. Kowalski",att:"48,112",
+ ev:[[30,"y","a",6],[63,"g","h",9,8],[78,"s","h",5],[85,"y","h",2]],s:[52,1.2,0.6,5,2,84,78,5,3,12,15]},
+{id:"f5",lg:"Premier League",h:"ngf",a:"hbc",st:"NS",day:"Today",time:"21:00",ref:"P. Whitfield",att:"—",ev:[],fut:[]},
+{id:"f6",lg:"Premier League",h:"wlr",a:"rbu",st:"NS",day:"Tomorrow",time:"16:00",ref:"D. Marsh",att:"—",ev:[],fut:[]},
+{id:"f7",lg:"Champions League",h:"hbc",a:"rso",st:"NS",day:"Tue 20 Oct",time:"21:00",ref:"G. Bianchi",att:"—",ev:[],fut:[]}];
+const B={"Premier League":{rbu:[9,6,2,1,18,8],ngf:[9,6,1,2,16,9],hbc:[9,5,2,2,17,10],wlr:[9,3,2,4,11,14]},
+"Champions League":{rbu:[3,2,1,0,6,2],ngf:[3,2,0,1,5,3],hbc:[3,1,1,1,4,4],wlr:[3,1,0,2,3,5],rso:[3,2,1,0,7,3],cbr:[3,0,1,2,3,7]}};
+/* ---------- helpers ---------- */
+const S={st:"All",lg:"All",tl:"Premier League",tab:null};
+const SL={LIVE:"Live",FT:"Finished",NS:"Scheduled"},IC={g:"⚽",y:"🟨",r:"🟥",s:"🔁"};
+const cur=f=>f.st=="LIVE"?f.min:90;
+const crest=(t,s=40)=>`<svg width="${s}" height="${s}" viewBox="0 0 40 40"><path d="M20 2 36 8v12c0 9-7 16-16 19C11 36 4 29 4 20V8z" fill="${t.c}"/><path d="M20 5 33 10v10c0 7-5 13-13 16" fill="none" stroke="#000" opacity=".15" stroke-width="2"/><text x="20" y="25" text-anchor="middle" font-size="11" font-weight="800" fill="${t.tc}" font-family="Inter,sans-serif">${t.s}</text></svg>`;
+const status=f=>f.st=="LIVE"?`<span class="live"><i class="dot"></i>${f.min}′</span>`:f.st=="FT"?`<b>FT</b>`:`${f.day} · ${f.time}`;
+const stand=L=>Object.entries(B[L]).map(([id,b])=>{let[p,w,d,l,gf,ga]=b;F.filter(f=>f.lg==L&&f.st!="NS"&&(f.h==id||f.a==id)).forEach(f=>{const m=f.h==id?f.hs:f.as,o=f.h==id?f.as:f.hs;p++;gf+=m;ga+=o;m>o?w++:m<o?l++:d++});return{id,p,w,d,l,gf,ga,gd:gf-ga,pts:w*3+d}}).sort((x,y)=>y.pts-x.pts||y.gd-x.gd||y.gf-x.gf);
+const form=id=>(TM[id].form+F.filter(f=>f.st=="FT"&&(f.h==id||f.a==id)).map(f=>{const m=f.h==id?f.hs:f.as,o=f.h==id?f.as:f.hs;return m>o?"W":m<o?"L":"D"}).join("")).slice(-5);
+const fb=s=>[...s].map(c=>`<span class="fb fb${c}">${c}</span>`).join("");
+const evs=f=>{let h=0,a=0;return[...f.ev].sort((x,y)=>x[0]-y[0]).map(e=>{const[m,ty,sd,sl,as]=e,t=TM[sd=="h"?f.h:f.a];if(ty=="g")sd=="h"?h++:a++;
+return{m,ty,sd,t,p:t.xi[sl],ap:as!=null?t.xi[as]:null,sub:ty=="s"?t.bench[sl%t.bench.length]:null,sc:h+"–"+a}})};
+const etxt=e=>e.ty=="g"?`GOAL! ${e.t.n} score — ${e.p.n}${e.ap?` (assist: ${e.ap.n})`:""}. It is now ${e.sc}.`:e.ty=="y"?`Yellow card for ${e.p.n} (${e.t.s}) after a mistimed challenge.`:e.ty=="r"?`RED CARD! ${e.p.n} (${e.t.s}) is sent off — the referee has no hesitation.`:`Substitution ${e.t.s}: ${e.sub.n} replaces ${e.p.n}.`;
+const comm=f=>{const h=TM[f.h],a=TM[f.a],c=cur(f);const fill=[[1,`Kick-off! ${h.n} get the game underway at ${h.v}.`],[8,`${h.s} settle into a rhythm with patient build-up down the left.`],[19,`Dangerous cross from ${a.s}, cleared at the near post for a corner.`],[31,`A strong tackle in midfield — the referee waves play on.`],[45,`Half-time. The teams head down the tunnel.`],[46,`We are back under way for the second half.`],[60,`${a.n} push higher up the pitch, looking for a way back in.`],[75,`The crowd at ${h.v} urge their side forward.`],[90,`Full-time. The referee blows the final whistle.`]].map(([m,x])=>({m,x,ty:"c"}));
+return[...evs(f).map(e=>({m:e.m,x:etxt(e),ty:e.ty})),...fill].filter(x=>x.m<=c).sort((x,y)=>y.m-x.m)};
+const pn=p=>`<span class="font-semibold hov" style="display:inline-block;transform:none" data-go="#/player/${p.id}">${p.n}</span>`;
+const stat=(l,a,b,d=0)=>{const t=(+a+ +b)||1;return`<div class="my-3"><div class="flex justify-between text-sm font-semibold"><span>${(+a).toFixed(d)}</span><span class="mut font-normal">${l}</span><span>${(+b).toFixed(d)}</span></div><div class="flex gap-1 mt-1"><div class="bar flex-1" style="direction:rtl"><i style="width:${a/t*100}%;background:var(--h)"></i></div><div class="bar flex-1"><i style="width:${b/t*100}%;background:var(--a)"></i></div></div></div>`};
+const tabs=(list,d)=>{const c=list.includes(S.tab)?S.tab:d;return[c,`<div class="flex scroll border-b mb-5" style="border-color:var(--bd)">${list.map(x=>`<div class="tab ${x==c?"on":""}" data-tab="${x}">${x}</div>`).join("")}</div>`]};
+const mom=(f,h,a)=>{if(f.st=="NS")return"";const ac=a.c=="#e5e7eb"?"#f59e0b":a.c;return`<div class="card p-5 mb-5"><div class="flex justify-between text-xs mut mb-3"><span>${h.s} pressure</span><b style="color:var(--tx)">Match momentum</b><span>${a.s} pressure</span></div><div class="flex gap-1 h-28">${Array.from({length:Math.ceil(cur(f)/5)},(_,i)=>{const v=R(f.id.charCodeAt(1)*50+i)()-.5+(f.s[0]-50)/60;return`<div class="flex-1 flex flex-col"><div class="flex-1 flex items-end"><i class="block w-full rounded-t" style="height:${v>0?Math.min(100,v*160):0}%;background:${h.c}"></i></div><div class="flex-1"><i class="block w-full rounded-b" style="height:${v<0?Math.min(100,-v*160):0}%;background:${ac}"></i></div></div>`}).join("")}</div><div class="flex justify-between text-xs mut mt-2"><span>0′</span><span>45′</span><span>${cur(f)}′</span></div></div>`};
+const chip=(k,v)=>`<button class="chip ${S[k]==v?"on":""}" data-f="${k}:${v}">${v}</button>`;
+const sum=f=>evs(f).filter(e=>e.ty=="g"||e.ty=="r").map(e=>`<span class="${e.sd=="a"?"float-right":""}">${IC[e.ty]} ${e.p.n.split(" ")[1]} ${e.m}′</span>`).join("<br>");
+const card=f=>{const h=TM[f.h],a=TM[f.a];return`<div class="card p-4 hov" data-go="#/match/${f.id}"><div class="flex justify-between text-xs mut mb-3"><span>${f.lg}</span><span>${status(f)}</span></div>
+<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2"><div class="text-center" data-go="#/team/${h.id}">${crest(h,46)}<div class="text-sm font-semibold mt-1">${h.n}</div></div>
+<div class="text-3xl font-extrabold tabular-nums">${f.st=="NS"?`<span class="text-xl">${f.time}</span>`:`${f.hs} – ${f.as}`}</div>
+<div class="text-center" data-go="#/team/${a.id}">${crest(a,46)}<div class="text-sm font-semibold mt-1">${a.n}</div></div></div>
+<div class="text-xs mut mt-3 pt-3 border-t" style="border-color:var(--bd)">📍 ${h.v} · 🧑‍⚖️ ${f.ref}</div>${f.ev.length?`<div class="text-xs mt-2 min-h-[32px]">${sum(f)}</div>`:""}</div>`};
+/* ---------- views ---------- */
+const V={
+hub(){const l=F.find(f=>f.st=="LIVE"),list=F.filter(f=>(S.st=="All"||SL[f.st]==S.st)&&(S.lg=="All"||f.lg==S.lg));
+return`<h1 class="text-3xl font-extrabold mb-1">Match Centre</h1><p class="mut mb-4">Live scores, results and fixtures</p><input id="q" autocomplete="off" placeholder="Search players and clubs…" class="w-full mb-4 px-4 py-3 rounded-2xl text-sm outline-none" style="background:var(--card);border:1px solid var(--bd);color:var(--tx)"><div id="sr"></div>
+${l?`<div class="card p-3 mb-5 flex items-center gap-3 text-sm hov" data-go="#/match/${l.id}"><span class="live"><i class="dot"></i>${l.min}′</span><b>${TM[l.h].s} ${l.hs}–${l.as} ${TM[l.a].s}</b><span class="mut truncate">${comm(l)[0].x}</span></div>`:""}
+<div class="flex gap-2 scroll pb-2 mb-2">${["All","Live","Finished","Scheduled"].map(v=>chip("st",v)).join("")}</div>
+<div class="flex gap-2 scroll pb-3 mb-3">${["All","Premier League","Champions League"].map(v=>chip("lg",v)).join("")}</div>
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">${list.map(card).join("")||`<p class="mut">No matches for this filter.</p>`}</div>`},
+match(id){const f=F.find(x=>x.id==id)||F[0],h=TM[f.h],a=TM[f.a],[tb,th]=tabs(["Overview","Lineups","Commentary","H2H"],"Overview"),E=evs(f),k=f.st!="NS",sc=f.st=="LIVE"?f.min/90:1;
+const gl=sd=>E.filter(e=>e.ty=="g"&&e.sd==sd).map(e=>`${e.p.n.split(" ")[1]} ${e.m}′`).join("<br>");
+let body="";
+if(tb=="Overview")body=!k?`<div class="card p-6 text-center mut">Kick-off ${f.day} at ${f.time}. Stats and timeline appear once the match starts.</div>`:
+`${mom(f,h,a)}<div class="grid md:grid-cols-2 gap-5"><div class="card p-5"><h3 class="font-bold mb-4">Timeline</h3>${E.slice().reverse().map(e=>`<div class="grid grid-cols-[1fr_46px_1fr] items-center gap-1 py-2 text-sm border-t" style="border-color:var(--bd)"><div class="text-right">${e.sd=="h"?`${pn(e.p)} ${IC[e.ty]}${e.ap?`<div class="mut text-xs">assist ${e.ap.n}</div>`:""}${e.sub?`<div class="mut text-xs">in: ${e.sub.n}</div>`:""}`:""}</div><div class="text-center mut font-semibold">${e.m}′</div><div>${e.sd=="a"?`${IC[e.ty]} ${pn(e.p)}${e.ap?`<div class="mut text-xs">assist ${e.ap.n}</div>`:""}${e.sub?`<div class="mut text-xs">in: ${e.sub.n}</div>`:""}`:""}</div></div>`).join("")||`<p class="mut">No events yet.</p>`}</div>
+<div class="card p-5" style="--h:${h.c};--a:${a.tc=="#fff"||a.c=="#e5e7eb"?a.c:"#f59e0b"}"><h3 class="font-bold mb-2">Match stats</h3>${stat("Possession %",f.s[0],100-f.s[0])}${stat("Expected goals (xG)",f.s[1]*sc,f.s[2]*sc,1)}${stat("Shots on target",Math.round(f.s[3]*sc),Math.round(f.s[4]*sc))}${stat("Pass accuracy %",f.s[5],f.s[6])}${stat("Corners",Math.round(f.s[7]*sc),Math.round(f.s[8]*sc))}${stat("Fouls",Math.round(f.s[9]*sc),Math.round(f.s[10]*sc))}</div></div>`;
+if(tb=="Lineups"){const side=(t,top)=>{const rows=FR[t.f];let i=0;return rows.map((n,ri)=>{const y0=93-ri*(35/(rows.length-1)),y=top?100-y0:y0;return Array.from({length:n},(_,j)=>{const p=t.xi[i++];return`<div class="pl" style="left:${(j+1)*100/(n+1)}%;top:${y}%" data-go="#/player/${p.id}"><b style="background:${t.c};color:${t.tc}">${p.num}</b>${k?`<i>${p.rt}</i>`:""}<small>${p.n.split(" ")[1]}</small></div>`}).join("")}).join("")};
+body=`<div class="flex justify-between text-sm mb-3"><span>${crest(a,22)} ${a.n} · ${a.f}</span><span>${h.n} · ${h.f} ${crest(h,22)}</span></div><div class="pitch">${side(a,true)}${side(h,false)}</div>
+<div class="grid md:grid-cols-2 gap-5 mt-5">${[h,a].map(t=>`<div class="card p-5"><div class="font-bold mb-1">${t.n} — bench</div><div class="mut text-xs mb-3">Manager: ${t.m}</div>${t.bench.map(p=>`<div class="flex justify-between py-1.5 text-sm hov" style="transform:none" data-go="#/player/${p.id}"><span><span class="mut">${p.num}</span> ${p.n}</span><span class="mut">${p.pos}</span></div>`).join("")}</div>`).join("")}</div>`}
+if(tb=="Commentary")body=k?`<div class="card p-3">${comm(f).map(c=>`<div class="flex gap-3 p-3 border-t first:border-0 text-sm" style="border-color:var(--bd)"><b class="w-10 shrink-0" style="color:var(--acc)">${c.m}′</b><span>${IC[c.ty]||"💬"} ${c.x}</span></div>`).join("")}</div>`:`<div class="card p-6 mut text-center">Commentary starts at kick-off.</div>`;
+if(tb=="H2H"){const r=R([...f.h+f.a].reduce((x,c)=>x*31+c.charCodeAt(0),7)),D=["Mar 2026","Nov 2025","Apr 2025","Dec 2024","Aug 2024"],M=D.map((d,i)=>({d,hh:i%2?a:h,g:[r()*4|0,r()*3|0]})).map(m=>({...m,hw:m.hh==h?m.g[0]-m.g[1]:m.g[1]-m.g[0]}));
+const w=M.filter(m=>m.hw>0).length,l=M.filter(m=>m.hw<0).length,d=5-w-l;
+body=`<div class="card p-5"><div class="flex justify-between text-sm font-semibold mb-2"><span>${h.s} ${w}W</span><span class="mut">${d}D</span><span>${l}W ${a.s}</span></div><div class="flex h-3 rounded-full overflow-hidden"><i style="width:${w*20}%;background:${h.c}"></i><i style="width:${d*20}%;background:#64748b"></i><i style="width:${l*20}%;background:${a.c=="#e5e7eb"?"#f59e0b":a.c}"></i></div>
+<div class="mt-5">${M.map(m=>{const o=m.hh==h?a:h;return`<div class="flex justify-between py-2.5 border-t text-sm" style="border-color:var(--bd)"><span class="mut w-20">${m.d}</span><span>${m.hh.s} <b>${m.g[0]} – ${m.g[1]}</b> ${o.s}</span><span class="fb fb${m.hw>0?"W":m.hw<0?"L":"D"}">${m.hw>0?"W":m.hw<0?"L":"D"}</span></div>`}).join("")}</div></div>`}
+return`<a class="text-sm mut" href="#/">← Back</a><div class="card p-6 mt-3 mb-5" style="background:linear-gradient(120deg,${h.c}33,transparent 45%,${a.c=="#e5e7eb"?"#f59e0b":a.c}33)"><div class="text-center text-xs mut mb-4">${f.lg} · ${status(f)} · ${f.day}</div>
+<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3"><div class="text-center hov" style="transform:none" data-go="#/team/${h.id}">${crest(h,72)}<div class="font-bold mt-2">${h.n}</div></div><div class="text-5xl font-extrabold tabular-nums">${k?`${f.hs} – ${f.as}`:f.time}</div><div class="text-center hov" style="transform:none" data-go="#/team/${a.id}">${crest(a,72)}<div class="font-bold mt-2">${a.n}</div></div></div>
+<div class="grid grid-cols-2 gap-3 text-xs mut mt-4"><div>${gl("h")}</div><div class="text-right">${gl("a")}</div></div><div class="text-center text-xs mut mt-4">📍 ${h.v} · 🧑‍⚖️ ${f.ref} · 👥 ${f.att}</div></div>${th}${body}`},
+team(id){const t=TM[id]||T[0],[tb,th]=tabs(["Squad","Fixtures","Stats"],"Squad"),st=stand(t.lk),pos=st.findIndex(x=>x.id==t.id)+1;let body="";
+if(tb=="Squad")body=Object.keys(PN).map(x=>`<div class="card p-4 mb-4 scroll"><h3 class="font-bold mb-2">${PN[x]}</h3><table><tr><th>#</th><th>Player</th><th>Nat</th><th>Age</th><th>G</th><th>A</th></tr>${t.sq.filter(p=>p.pos==x).map(p=>`<tr data-go="#/player/${p.id}"><td>${p.num}</td><td class="font-semibold">${p.n}</td><td>${p.nat}</td><td>${p.age}</td><td>${p.g}</td><td>${p.a}</td></tr>`).join("")}</table></div>`).join("");
+if(tb=="Fixtures"){const r=R(t.s.charCodeAt(0)*9),past=[0,1,2].map(i=>{const o=T[(T.indexOf(t)+2+i)%6],g=[r()*4|0,r()*3|0];return`<div class="flex justify-between py-2.5 border-t text-sm" style="border-color:var(--bd)"><span class="mut">Earlier</span><span>${t.s} <b>${g[0]} – ${g[1]}</b> ${o.s}</span><span class="fb fb${g[0]>g[1]?"W":g[0]<g[1]?"L":"D"}">${g[0]>g[1]?"W":g[0]<g[1]?"L":"D"}</span></div>`}).join("");
+body=`<div class="card p-4"><h3 class="font-bold mb-2">Results & fixtures</h3>${F.filter(f=>f.h==id||f.a==id).map(f=>`<div class="flex justify-between py-2.5 border-t text-sm hov" style="border-color:var(--bd);transform:none" data-go="#/match/${f.id}"><span class="mut w-24">${f.st=="NS"?f.day:SL[f.st]}</span><span>${TM[f.h].s} <b>${f.st=="NS"?"v":f.hs+" – "+f.as}</b> ${TM[f.a].s}</span><span class="mut">${f.lg.slice(0,3)}</span></div>`).join("")}${past}</div>`}
+if(tb=="Stats"){const top=[...t.sq].sort((a,b)=>b.g-a.g).slice(0,5),b=B[t.lk][id],hw=Math.ceil(b[1]*.6),hd=Math.ceil(b[2]*.5),hl=Math.floor(b[3]*.4);
+body=`<div class="grid md:grid-cols-2 gap-5"><div class="card p-5"><h3 class="font-bold mb-3">Top scorers</h3>${top.map(p=>`<div class="my-3 text-sm hov" style="transform:none" data-go="#/player/${p.id}"><div class="flex justify-between"><span>${p.n}</span><b>${p.g} goals</b></div><div class="bar mt-1"><i style="width:${p.g/top[0].g*100}%;background:${t.c=="#e5e7eb"?"var(--acc)":t.c}"></i></div></div>`).join("")}</div>
+<div class="card p-5"><h3 class="font-bold mb-3">Discipline</h3><div class="flex gap-6 text-3xl font-extrabold mb-5"><span>🟨 ${t.sq.reduce((a,p)=>a+p.yc,0)}</span><span>🟥 ${t.sq.reduce((a,p)=>a+p.rc,0)}</span></div><h3 class="font-bold mb-2">Home vs away</h3><table><tr><th></th><th></th><th>W</th><th>D</th><th>L</th></tr><tr><td></td><td>Home</td><td>${hw}</td><td>${hd}</td><td>${hl}</td></tr><tr><td></td><td>Away</td><td>${b[1]-hw}</td><td>${b[2]-hd}</td><td>${b[3]-hl}</td></tr></table></div></div>`}
+return`<a class="text-sm mut" href="#/teams">← Clubs</a><div class="card p-6 mt-3 mb-5 flex flex-wrap items-center gap-5" style="background:linear-gradient(120deg,${t.c}33,transparent 60%)">${crest(t,84)}<div><h1 class="text-3xl font-extrabold">${t.n}</h1><div class="mut text-sm">#${pos} in ${t.lk} · ${t.v} · Manager ${t.m}</div><div class="mt-3">${fb(form(id))}</div></div></div>${th}${body}`},
+player(id){const p=P[id]||Object.values(P)[0],t=TM[p.t],c=t.c=="#e5e7eb"?"#22d3a0":t.c,pts=p.at.map((v,i)=>{const an=(-90+60*i)*Math.PI/180;return[110+Math.cos(an)*v*.8,110+Math.sin(an)*v*.8]});
+const hex=k=>AT.map((_,i)=>{const an=(-90+60*i)*Math.PI/180;return(110+Math.cos(an)*k*.8)+","+(110+Math.sin(an)*k*.8)}).join(" ");
+return`<a class="text-sm mut" href="#/team/${t.id}">← ${t.n}</a><div class="card p-6 mt-3 mb-5 flex flex-wrap items-center gap-5" style="background:linear-gradient(120deg,${c}33,transparent 60%)"><div class="grid place-items-center rounded-full font-extrabold text-3xl" style="width:96px;height:96px;background:${c};color:${t.tc=="#fff"?"#fff":"#06283d"}">${p.n.split(" ").map(x=>x[0]).join("")}</div>
+<div><div class="mut text-sm">#${p.num} · ${PN[p.pos].slice(0,-1)}</div><h1 class="text-3xl font-extrabold">${p.n}</h1><div class="text-sm mut mt-1 hov" style="transform:none;display:inline-block" data-go="#/team/${t.id}">${t.n}</div>
+<div class="flex flex-wrap gap-2 mt-3 text-xs"><span class="chip">${p.nat}</span><span class="chip">Age ${p.age}</span><span class="chip">${p.foot} foot</span><span class="chip">Value ${p.val}</span></div></div></div>
+<div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-5">${[["Apps",p.ap],["Goals",p.g],["xG",p.xg],["Assists",p.a],["Pass %",p.pp],["Tackle %",p.tk]].map(([l,v])=>`<div class="card p-3 text-center"><div class="text-2xl font-extrabold">${v}</div><div class="mut text-xs">${l}</div></div>`).join("")}</div>
+<div class="grid md:grid-cols-2 gap-5"><div class="card p-5"><h3 class="font-bold mb-2">Attributes</h3><svg viewBox="0 0 220 220" class="mx-auto" width="260">${[100,66,33].map(k=>`<polygon points="${hex(k)}" fill="none" stroke="var(--bd)"/>`).join("")}<polygon points="${pts.map(x=>x.join(",")).join(" ")}" fill="${c}" fill-opacity=".35" stroke="${c}" stroke-width="2"/>${AT.map((a,i)=>{const an=(-90+60*i)*Math.PI/180;return`<text x="${110+Math.cos(an)*98}" y="${113+Math.sin(an)*98}" font-size="9" text-anchor="middle" fill="var(--mut)">${a} ${p.at[i]}</text>`}).join("")}</svg></div>
+<div class="card p-5"><h3 class="font-bold mb-2">Recent match log</h3><table><tr><th></th><th>Opp</th><th>Res</th><th>G</th><th>A</th><th>Rating</th></tr>${p.log.map(l=>`<tr><td></td><td>${l.o}</td><td><span class="fb fb${l.res}">${l.res}</span></td><td>${l.g}</td><td>${l.a}</td><td><b style="color:${l.rt>=7.5?"#22d3a0":l.rt<6.2?"#f87171":"inherit"}">${l.rt}</b></td></tr>`).join("")}</table><div class="mut text-xs mt-3">Season average rating: ${p.rt}</div></div></div>`},
+table(){const L=S.tl,st=stand(L),live=F.filter(f=>f.st=="LIVE").flatMap(f=>[f.h,f.a]);
+return`<h1 class="text-3xl font-extrabold mb-4">Standings</h1><div class="flex gap-2 mb-4">${["Premier League","Champions League"].map(v=>chip("tl",v)).join("")}</div><div class="card p-3 scroll"><table><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Form</th></tr>
+${st.map((r,i)=>{const t=TM[r.id];return`<tr data-go="#/team/${r.id}"><td style="border-left:3px solid ${i<2?"var(--acc)":"transparent"}">${i+1}</td><td class="font-semibold whitespace-nowrap">${crest(t,22)} ${t.n} ${live.includes(r.id)?`<i class="dot"></i>`:""}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gf}</td><td>${r.ga}</td><td>${r.gd>0?"+":""}${r.gd}</td><td><b>${r.pts}</b></td><td class="whitespace-nowrap">${fb(form(r.id))}</td></tr>`}).join("")}</table></div><p class="mut text-xs mt-3">Table updates live with in-play scores (🔴 = playing now).</p>`},
+stats(){const[tb,th]=tabs(["Goals","Assists","Avg Rating","Cards"],"Goals"),k={Goals:p=>p.g,Assists:p=>p.a,"Avg Rating":p=>p.rt,Cards:p=>p.yc+p.rc*3}[tb],L=Object.values(P).sort((a,b)=>k(b)-k(a)).slice(0,15);
+return`<h1 class="text-3xl font-extrabold mb-1">Season Stats</h1><p class="mut mb-5">Leaders across all six clubs</p>${th}<div class="card p-3 scroll"><table><tr><th>#</th><th>Player</th><th>Club</th><th>Apps</th><th>${tb}</th></tr>${L.map((p,i)=>`<tr data-go="#/player/${p.id}"><td>${i+1}</td><td class="font-semibold whitespace-nowrap">${p.n}</td><td>${crest(TM[p.t],20)}</td><td>${p.ap}</td><td><b>${tb=="Cards"?`🟨${p.yc} 🟥${p.rc}`:k(p)}</b></td></tr>`).join("")}</table></div>`},
+teams(){return`<h1 class="text-3xl font-extrabold mb-5">Clubs</h1><div class="grid grid-cols-2 md:grid-cols-3 gap-4">${T.map(t=>`<div class="card p-5 text-center hov" data-go="#/team/${t.id}">${crest(t,64)}<div class="font-bold mt-2">${t.n}</div><div class="mut text-xs">${t.lk}</div><div class="mt-2">${fb(form(t.id))}</div></div>`).join("")}</div>`}};
+/* ---------- router & events ---------- */
+const main=document.getElementById("main");
+function render(){const[,v,id]=location.hash.split("/"),k=v||"hub";main.innerHTML=(V[k]||V.hub)(id);
+document.querySelectorAll("[data-n]").forEach(a=>a.classList.toggle("on",a.dataset.n==({match:"hub",team:"teams",player:"teams"}[k]||k)))}
+addEventListener("hashchange",()=>{S.tab=null;render();scrollTo(0,0)});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-tab]");if(t){S.tab=t.dataset.tab;render();return}
+const f=e.target.closest("[data-f]");if(f){const[k,v]=f.dataset.f.split(":");S[k]=v;render();return}
+const g=e.target.closest("[data-go]");if(g)location.hash=g.dataset.go});
+/* live simulation: 1 match minute every 1.8 s */
+setInterval(()=>{const f=F[0];if(f.st!="LIVE")return;f.min++;
+while(f.fut.length&&f.fut[0][0]<=f.min){const e=f.fut.shift();f.ev.push(e);if(e[1]=="g")e[2]=="h"?f.hs++:f.as++}
+if(f.min>=90){f.st="FT";f.min=90}
+const v=location.hash.split("/")[1];if(document.activeElement.id!="q"&&!(document.getElementById("q")||{}).value&&(!v||["table","match","teams"].includes(v)))render()},1800);
+document.addEventListener("input",e=>{if(e.target.id!="q")return;const q=e.target.value.toLowerCase().trim(),r=document.getElementById("sr");r.className=q.length<2?"":"card p-3 mb-4";r.innerHTML=q.length<2?"":([...T.filter(t=>t.n.toLowerCase().includes(q)).map(t=>`<div class="py-2 hov" style="transform:none" data-go="#/team/${t.id}">${crest(t,22)} ${t.n}</div>`),...Object.values(P).filter(p=>p.n.toLowerCase().includes(q)).slice(0,8).map(p=>`<div class="py-2 hov" style="transform:none" data-go="#/player/${p.id}">${TM[p.t].s} · ${p.n} <span class="mut">${p.pos}</span></div>`)].join("")||`<p class="mut text-sm">No results</p>`)});
+render();
+</script>
+</body>
+</html>
